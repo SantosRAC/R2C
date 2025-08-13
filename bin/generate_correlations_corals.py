@@ -21,6 +21,10 @@ parser.add_argument('--min_abs_cor', type=float, dest='min_cor',
 parser.add_argument('--corals_topk_k', type=float, dest='topk_k',
                     help='K parameter for corALS (topk)', metavar="0.05",
                     default=0.05)
+parser.add_argument('--out_fmt', type=str, dest='network_format',
+                    help='Output network format (lstrap or edge_list)', metavar="edge_list",
+                    default="edge_list")
+
 args = parser.parse_args()
 
 matrix_file = args.expression_file
@@ -35,7 +39,16 @@ expression_matrix_transposed_filtered= expression_matrix_transposed.loc[:, expre
 gene_names=expression_matrix_transposed_filtered.columns.to_list()
 cor_topk_result = cor_topk(expression_matrix_transposed_filtered, k=topk_k, correlation_type="pearson", n_jobs=3)
 
-with open(args.output_network, 'w') as out:
-    for i, j, v in zip(cor_topk_result[1][0], cor_topk_result[1][1], cor_topk_result[0]):
-        if abs(v) >= min_cor:
-            out.write(f"{gene_names[i]}\t{gene_names[j]}\t{v}\n")
+if args.network_format == "lstrap":
+    with open(args.output_network, 'w') as out:
+        for i in cor_topk_result[1][0]: 
+            out.write(f"{gene_names[i]}:")
+            for j, v in zip(cor_topk_result[1][1], cor_topk_result[0]):
+                if abs(v) >= min_cor:
+                    out.write(f"\t{gene_names[j]}({v})")
+            out.write(f"\n")
+else:
+    with open(args.output_network, 'w') as out:
+            for i, j, v in zip(cor_topk_result[1][0], cor_topk_result[1][1], cor_topk_result[0]):
+                if abs(v) >= min_cor:
+                    out.write(f"{gene_names[i]}\t{gene_names[j]}\t{v}\n")
