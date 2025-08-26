@@ -1,4 +1,6 @@
 process downloadReadFTP {
+    maxForks 2  // limit parallel downloads: https://github.com/nextflow-io/nextflow/discussions/3415
+
     input:
         tuple val(run), path(json_file)
 
